@@ -1,0 +1,73 @@
+---
+import '../styles/global.css';
+import Flower from '../components/Flower.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  current?: 'home' | 'brand';
+}
+
+const {
+  title,
+  description = 'Email marketing portfolio by Gabriela Calbar: welcome flows, campaigns and abandoned cart emails.',
+  current = 'home',
+} = Astro.props;
+
+const year = new Date().getFullYear();
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#fdffdb" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap">
+        <a href="/" class="logo" aria-label="Gabriela Calbar, home">
+          <img src="/brand/logo.png" alt="Gabriela Calbar" width="938" height="453" />
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <a href="/" aria-current={current === 'home' ? 'page' : undefined}>Emails</a>
+          <a href="https://www.gabrielacalbar.com/" target="_blank" rel="noopener" class="hide-sm">Portfolio</a>
+          <a href="#contact">Contact</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer" id="contact">
+      <Flower color="var(--lime)" size={260} spin style="right:-60px; top:-40px; opacity:.9" />
+      <div class="wrap">
+        <h2>Let’s<br />talk</h2>
+        <div class="contact">
+          <a href="mailto:calbar.design@gmail.com">calbar.design@gmail.com</a>
+          <a href="https://www.gabrielacalbar.com/" target="_blank" rel="noopener">gabrielacalbar.com</a>
+        </div>
+        <div class="bottom">
+          <span>© {year} Gabriela Calbar · Graphic Design</span>
+          <span class="disclaimer">
+            Concept project, created for portfolio purposes only. Not affiliated with the brands shown.
+          </span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

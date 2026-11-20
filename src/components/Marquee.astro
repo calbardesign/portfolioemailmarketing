@@ -1,0 +1,14 @@
+---
+interface Props {
+  text: string;
+  variant?: 'pink' | 'lime' | 'green';
+}
+const { text, variant = 'pink' } = Astro.props;
+const items = Array.from({ length: 12 }, () => `${text} *`);
+---
+<div class={`marquee marquee--${variant}`} aria-hidden="true">
+  <div class="marquee__track">
+    {items.map((t) => <span>{t}</span>)}
+    {items.map((t) => <span>{t}</span>)}
+  </div>
+</div>

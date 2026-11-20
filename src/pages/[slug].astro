@@ -1,0 +1,414 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Marquee from '../components/Marquee.astro';
+import Flower from '../components/Flower.astro';
+import { brands, type Brand } from '../data/brands';
+import { emailImage } from '../lib/images';
+
+export function getStaticPaths() {
+  return brands.map((brand, index) => ({ params: { slug: brand.slug }, props: { brand, index } }));
+}
+
+interface Props {
+  brand: Brand;
+  index: number;
+}
+const { brand, index } = Astro.props;
+const pad = (n: number) => String(n).padStart(2, '0');
+const prev = brands[(index - 1 + brands.length) % brands.length];
+const next = brands[(index + 1) % brands.length];
+const blockColors = ['pink', 'lime', 'green'];
+---
+<Base title={`${brand.name} · Email Marketing · Gabriela Calbar`} description={brand.intro} current="brand">
+  <section class="b-hero">
+    <Flower color="var(--mint)" size={200} spin style="right:-50px; top:20px" />
+    <div class="wrap">
+      <a href="/#brands" class="back">← All brands</a>
+      <p class="eyebrow">{pad(index + 1)} / {pad(brands.length)} · {brand.segment}</p>
+      <h1 class="serif">{brand.name}</h1>
+      <div class="b-hero__row">
+        <p class="b-hero__intro">{brand.intro}</p>
+        <dl class="facts">
+          <div><dt>Deliverables</dt><dd>{brand.emails.length} emails</dd></div>
+          <div><dt>Platform</dt><dd>Klaviyo</dd></div>
+          <div>
+            <dt>Palette</dt>
+            <dd class="swatches">
+              {brand.palette.map((c) => <span style={`background:${c}`} title={c}></span>)}
+            </dd>
+          </div>
+        </dl>
+      </div>
+      <p class="disclaimer b-hero__disc">Concept project, created for portfolio purposes only.</p>
+    </div>
+  </section>
+
+  <Marquee text={brand.name} variant="pink" />
+
+  <section class="about">
+    <div class="wrap">
+      <h2 class="serif section-title">About the brand</h2>
+      <hr class="double-rule" />
+      <div class="blocks">
+        {brand.highlights.map((h, i) => (
+          <article class={`block block--${blockColors[i]}`}>
+            <span class="serif block__num">{pad(i + 1)}</span>
+            <h3 class="serif">{h.title}</h3>
+            <p>{h.text}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="done">
+    <div class="wrap">
+      <h2 class="serif section-title">What I did</h2>
+      <hr class="double-rule" />
+      <div class="done__grid">
+        <div class="done__visual">
+          <p class="eyebrow">Visual direction</p>
+          <p>{brand.visual}</p>
+        </div>
+        <ol class="flow">
+          {brand.emails.map((e, i) => (
+            <li>
+              <a href={`#email-${i + 1}`}>
+                <span class="flow__num serif">{pad(i + 1)}</span>
+                <span class="flow__body">
+                  <span class="eyebrow">{e.type}</span>
+                  <span class="flow__goal">{e.goal}</span>
+                </span>
+                <span class="flow__arrow" aria-hidden="true">↓</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  {brand.emails.map((e, i) => {
+    const img = emailImage(brand.slug, e.image);
+    return (
+      <section class="email" id={`email-${i + 1}`}>
+        <div class="wrap email__grid">
+          <div class="email__info">
+            <p class="eyebrow tag">Email {pad(i + 1)} · {e.type}</p>
+            <h2 class="serif">{e.title}</h2>
+            {e.trigger && <p class="trigger">{e.trigger}</p>}
+
+            <h3 class="label">Goal</h3>
+            <p class="goal">{e.goal}</p>
+
+            <h3 class="label">Key choices</h3>
+            <ul class="choices">
+              {e.choices.map((c) => <li>{c}</li>)}
+            </ul>
+
+            {(e.subject || e.preheader) && (
+              <dl class="inbox-meta">
+                {e.subject && (<div><dt>Subject line</dt><dd>{e.subject}</dd></div>)}
+                {e.preheader && (<div><dt>Preheader</dt><dd>{e.preheader}</dd></div>)}
+              </dl>
+            )}
+          </div>
+
+          <figure class="viewer" data-viewer>
+            <div class="viewer__bar">
+              <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="viewer__subject">{e.subject ?? `${brand.name} · ${e.title}`}</span>
+            </div>
+            <div class="viewer__scroll" tabindex="0" aria-label={`Email ${e.title}, scroll to view`}>
+              <Image
+                src={img}
+                alt={`${brand.name} ${e.type.toLowerCase()} email: ${e.title}`}
+                widths={[600, 1200]}
+                sizes="(max-width: 680px) 100vw, 600px"
+                format="webp"
+                quality={80}
+                loading="lazy"
+              />
+            </div>
+            <button class="viewer__toggle" type="button" data-toggle aria-expanded="false">
+              <span data-label>View full email</span>
+            </button>
+          </figure>
+        </div>
+      </section>
+    );
+  })}
+
+  <nav class="pager" aria-label="Other brands">
+    <div class="wrap pager__grid">
+      <a href={`/${prev.slug}/`} class="pager__link">
+        <span class="eyebrow">← Previous</span>
+        <span class="serif">{prev.name}</span>
+      </a>
+      <a href={`/${next.slug}/`} class="pager__link pager__link--next">
+        <span class="eyebrow">Next →</span>
+        <span class="serif">{next.name}</span>
+      </a>
+    </div>
+  </nav>
+</Base>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-viewer]').forEach((viewer) => {
+    const btn = viewer.querySelector<HTMLButtonElement>('[data-toggle]');
+    const label = viewer.querySelector<HTMLElement>('[data-label]');
+    btn?.addEventListener('click', () => {
+      const open = viewer.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', String(open));
+      if (label) label.textContent = open ? 'Collapse email' : 'View full email';
+      if (!open) viewer.scrollIntoView({ block: 'start' });
+    });
+  });
+</script>
+
+<style>
+  .b-hero {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(28px, 4vw, 48px) 0 clamp(48px, 6vw, 80px);
+  }
+  .b-hero .wrap { position: relative; z-index: 1; }
+  .back {
+    display: inline-block;
+    font-size: 14px;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    margin-bottom: clamp(28px, 4vw, 48px);
+  }
+  .b-hero .eyebrow { color: var(--green); margin: 0 0 8px; }
+  .b-hero h1 {
+    font-size: clamp(72px, 15vw, 210px);
+    line-height: .86;
+    color: var(--green);
+    text-transform: uppercase;
+    margin: 0 0 clamp(28px, 4vw, 44px);
+    overflow-wrap: anywhere;
+  }
+  .b-hero__row {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: clamp(24px, 5vw, 80px);
+    align-items: start;
+  }
+  .b-hero__intro { font-size: clamp(18px, 1.6vw, 21px); margin: 0; max-width: 58ch; }
+  .facts { margin: 0; display: grid; gap: 0; border-top: 1.5px solid var(--green); }
+  .facts div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1.5px solid var(--green);
+  }
+  .facts dt { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+  .facts dd { margin: 0; font-weight: 500; }
+  .swatches { display: flex; gap: 6px; }
+  .swatches span {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, .18);
+  }
+  .b-hero__disc { margin: 28px 0 0; }
+
+  .section-title {
+    font-size: clamp(48px, 6.5vw, 88px);
+    line-height: .9;
+    color: var(--green);
+    text-transform: uppercase;
+    margin: 0 0 20px;
+  }
+
+  .about { padding: clamp(64px, 8vw, 104px) 0 clamp(40px, 5vw, 64px); }
+  .blocks {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(16px, 2vw, 24px);
+    margin-top: clamp(32px, 4vw, 48px);
+  }
+  .block {
+    border-radius: var(--radius);
+    padding: clamp(24px, 3vw, 36px);
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+  }
+  .block--pink { background: var(--pink); color: var(--ink); }
+  .block--lime { background: var(--lime); color: var(--ink); }
+  .block--green { background: var(--green); color: var(--cream); }
+  .block__num { font-size: 40px; line-height: 1; }
+  .block h3 {
+    font-size: clamp(28px, 2.6vw, 36px);
+    line-height: 1.05;
+    margin: auto 0 12px;
+    padding-top: 40px;
+  }
+  .block p { margin: 0; font-size: 16px; }
+
+  .done { padding: clamp(40px, 5vw, 64px) 0 clamp(48px, 6vw, 80px); }
+  .done__grid {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: clamp(28px, 5vw, 72px);
+    margin-top: clamp(32px, 4vw, 48px);
+  }
+  .done__visual .eyebrow { color: var(--green); margin: 0 0 12px; }
+  .done__visual p:last-child { margin: 0; font-size: 18px; }
+  .flow { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--green); }
+  .flow a {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 20px;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1.5px solid var(--green);
+    text-decoration: none;
+    transition: background .2s, padding .2s;
+  }
+  .flow a:hover { background: var(--cream-2); padding-left: 12px; padding-right: 12px; }
+  .flow__num { font-size: 40px; line-height: 1; color: var(--pink-2); }
+  .flow__body { display: flex; flex-direction: column; gap: 4px; }
+  .flow__body .eyebrow { color: var(--green); }
+  .flow__goal { font-size: 16px; }
+  .flow__arrow { font-size: 20px; color: var(--green); }
+
+  .email { padding: clamp(56px, 7vw, 96px) 0; border-top: 1.5px solid var(--green); }
+  .email:nth-of-type(even) { background: var(--cream-2); }
+  .email__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 620px);
+    gap: clamp(32px, 5vw, 80px);
+    align-items: start;
+  }
+  .email__info { position: sticky; top: 120px; }
+  .tag {
+    display: inline-block;
+    background: var(--green);
+    color: var(--lime);
+    padding: 7px 14px;
+    border-radius: 999px;
+    margin: 0 0 18px;
+  }
+  .email__info h2 {
+    font-size: clamp(36px, 4vw, 56px);
+    line-height: 1;
+    color: var(--green);
+    margin: 0 0 10px;
+  }
+  .trigger { font-size: 14px; opacity: .75; margin: 0 0 28px; }
+  .label {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--pink-2);
+    margin: 26px 0 8px;
+  }
+  .goal { font-size: 18px; margin: 0; }
+  .choices { margin: 0; padding: 0; list-style: none; }
+  .choices li {
+    position: relative;
+    padding: 10px 0 10px 28px;
+    border-bottom: 1px solid color-mix(in srgb, var(--green) 25%, transparent);
+    font-size: 16px;
+  }
+  .choices li::before {
+    content: '*';
+    position: absolute;
+    left: 4px;
+    top: 6px;
+    font-family: var(--serif);
+    font-size: 26px;
+    line-height: 1;
+    color: var(--green);
+  }
+  .inbox-meta {
+    margin: 28px 0 0;
+    padding: 18px 20px;
+    border-radius: 18px;
+    background: var(--white);
+    border: 1.5px solid var(--green);
+    display: grid;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .inbox-meta dt { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
+  .inbox-meta dd { margin: 2px 0 0; font-weight: 500; }
+
+  .viewer {
+    margin: 0;
+    background: var(--white);
+    border: 1.5px solid var(--green);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 30px 70px -40px rgba(44, 74, 31, .55);
+  }
+  .viewer__bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-bottom: 1.5px solid var(--green);
+    background: var(--cream);
+    font-size: 13px;
+  }
+  .dots { display: flex; gap: 6px; flex: none; }
+  .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--pink-2); }
+  .dots i:nth-child(2) { background: var(--lime); }
+  .dots i:nth-child(3) { background: var(--green); }
+  .viewer__subject { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+  .viewer__scroll {
+    max-height: min(78vh, 860px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .viewer.is-open .viewer__scroll { max-height: none; overflow: visible; }
+  .viewer__scroll :global(img) { width: 100%; height: auto; max-width: 600px; margin: 0 auto; }
+  .viewer__toggle {
+    width: 100%;
+    border: 0;
+    border-top: 1.5px solid var(--green);
+    background: var(--lime);
+    color: var(--green-ink);
+    font: 500 15px var(--sans);
+    padding: 14px;
+    cursor: pointer;
+  }
+  .viewer__toggle:hover { background: var(--mint); }
+
+  .pager { border-top: 1.5px solid var(--green); }
+  .pager__grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .pager__link {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: clamp(32px, 5vw, 56px) 0;
+    text-decoration: none;
+    color: var(--green);
+  }
+  .pager__link--next { text-align: right; align-items: flex-end; border-left: 1.5px solid var(--green); }
+  .pager__link .serif { font-size: clamp(32px, 5vw, 64px); line-height: 1; text-transform: uppercase; }
+  .pager__link:hover .serif { color: var(--pink-2); }
+
+  @media (max-width: 900px) {
+    .b-hero__row, .done__grid, .email__grid { grid-template-columns: 1fr; }
+    .email__info { position: static; }
+    .blocks { grid-template-columns: 1fr; }
+    .block { min-height: 0; }
+    .block h3 { padding-top: 20px; }
+  }
+  @media (max-width: 560px) {
+    .b-hero :global(.flower) { width: 110px; height: 110px; top: auto !important; bottom: -30px; right: -30px !important; }
+    .pager__grid { grid-template-columns: 1fr; }
+    .pager__link--next { border-left: 0; border-top: 1.5px solid var(--green); }
+    .pager__link { padding: 28px 0; }
+    .flow__num { font-size: 30px; }
+    .flow a { gap: 14px; }
+    .viewer__scroll { max-height: 70vh; }
+  }
+</style>
